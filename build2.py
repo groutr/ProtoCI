@@ -172,7 +172,7 @@ def dirty(graph):
     """
     Return a set of all dirty nodes in the graph
     """
-    return {n for n in graph.node if getattr(n, 'dirty', False) == True}
+    return {n for n, v in graph.node.items() if v.get('dirty', False)}
 
 def successors_iter(g, s, nodes):
     for s in g.successors(s):
@@ -226,12 +226,21 @@ def build_order(graph, packages, level=0):
     Builds a temporary graph of relevant nodes and returns it topological sort.
     
     Relevant nodes selected in a breadth first traversal sourced at each pkg in packages.
+    
+    Values expected for packages is one of None, sequence:
+       None: build the whole graph
+       empty sequence: build nodes marked dirty
+       non-empty sequence: build nodes in sequence
     '''
 
     if packages is None:
         tmp_global = graph.subgraph(graph.nodes())
     else:
-        packages = set(packages)
+        # sequence
+        if packages:
+            packages = set(packages)
+        else:
+            packages = dirty(graph)
         tmp_global = graph.subgraph(packages)
 
         if level > 0:
