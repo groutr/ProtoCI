@@ -14,7 +14,6 @@ import networkx as nx
 import sys
 
 
-
 from conda_build.metadata import parse, MetaData
 
 CONDA_BUILD_CACHE=os.environ.get("CONDA_BUILD_CACHE")
@@ -206,7 +205,10 @@ def split_graph(g, targetnum, split_file):
 
 def build_order(graph, packages, level=0):
     '''
-    Assumes that packages are in graph
+    Assumes that packages are in graph.
+    Builds a temporary graph of relevant nodes and returns it topological sort.
+    
+    Relevant nodes selected in a breadth first traversal sourced at each pkg in packages.
     '''
 
     if packages is None:
@@ -233,14 +235,6 @@ def build_order(graph, packages, level=0):
         tmp_global.node[n] = graph.node[n]
 
     return tmp_global, nx.topological_sort(tmp_global, reverse=True)
-
-
-def check_built(package):
-    '''Check to see if package is already built'''
-    print("checking if package exists")
-    if os.path.exists(os.path.join(CONDA_BUILD_CACHE, package.pkg_fn())):
-        return True
-    return False
 
 
 def make_deps(graph, package, dry=False, extra_args='', level=0, autofail=True):
