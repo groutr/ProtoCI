@@ -168,11 +168,20 @@ def construct_graph(directory):
 
     return g
 
-def dirty(graph):
+def dirty(graph, implicit=True):
     """
-    Return a set of all dirty nodes in the graph
+    Return a set of all dirty nodes in the graph.
+    
+    These include implicit and explicit dirty nodes.
     """
-    return {n for n, v in graph.node.items() if v.get('dirty', False)}
+    # Reverse the edges to get true dependency
+    dirty_nodes = {n for n, v in graph.node.items() if v.get('dirty', False)}
+    if not implicit:
+        return dirty_nodes
+    
+    # Get implicitly dirty nodes (all of the packages that depend on a dirty package)
+    dirty_nodes.update(*map(set, (graph.predecessors(n) for n in dirty_nodes)))
+    return dirty_nodes
 
 def successors_iter(g, s, nodes):
     for s in g.successors(s):
